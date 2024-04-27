@@ -4,11 +4,15 @@ SOURCES = $(wildcard src/*.c)
 OUTDIR = execs
 EXECUTABLES = $(patsubst src/%,$(OUTDIR)/%,$(SOURCES:%.c=%))
 
-all: $(EXECUTABLES)
+all: $(OUTDIR) $(EXECUTABLES)
+
+$(OUTDIR):
+	mkdir -p $(OUTDIR)
 
 $(OUTDIR)/%: src/%.c
-	mkdir -p $(OUTDIR)
 	$(CC) $(CFLAGS) $< -o $@
 
 clean:
 	rm -f $(EXECUTABLES)
+
+.PHONY: all clean
