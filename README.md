@@ -13,5 +13,5 @@ Pour compiler le projet, vous aurez besoin de GCC. Une fois que vous avez cloné
 Chaque exécutable peut être exécuté individuellement. Par exemple, pour exécuter l'exécutable `program`, vous pouvez utiliser la commande suivante à la racine du projet :
 
 ```bash
-./execs/program
+./execs/nom_de_l_executable
 ```
