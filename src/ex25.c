@@ -20,7 +20,7 @@ void biprocess_pi(double *pi);
 void interrupted_pi(double *pi);
 void parallel_pi(double *pi, int q);
 
-void close_all_tubes(int tubes[][2], int count);
+void close_all_pipes(int tubes[][2], int count);
 
 volatile sig_atomic_t keep_running = 1;
 void sigint_handler(int signal) {
@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
 double get_random_btwn_0_1(void) {
     return (double) rand() / RAND_MAX;
 }
-void close_all_tubes(int tubes[][2], int count) {
+void close_all_pipes(int tubes[][2], int count) {
     for (int i = 0; i < count; i++) {
         close(tubes[i][0]);
         close(tubes[i][1]);
@@ -225,11 +225,11 @@ void parallel_pi(double *pi, int q) {
     for(int i = 0; i < q; ++i) {
         if(pipe(tube[i]) == -1) {
             perror("Pipe for process failed");
-            close_all_tubes(tube, q);
+            close_all_pipes(tube, q);
             exit(EXIT_FAILURE);
         }
         pid_t pid = fork();
-        if(pid == -1) { perror("Creating new child"); close_all_tubes(tube, q); exit(EXIT_FAILURE); }
+        if(pid == -1) { perror("Creating new child"); close_all_pipes(tube, q); exit(EXIT_FAILURE); }
         if(pid == 0) {
             srand(time(NULL) ^ getpid());
             close(tube[i][0]); // on ferme l'extrémité de lecture, car on ne l'utilise pas.
@@ -241,8 +241,8 @@ void parallel_pi(double *pi, int q) {
                 double y = get_random_btwn_0_1();
                 if ((x * x) + (y * y) < 1) p++;
             }
-            if( write(tube[i][1], &p, sizeof(p)) == -1 ) { perror("write p"); close_all_tubes(tube, q); exit(EXIT_FAILURE); }
-            if( write(tube[i][1], &n, sizeof(n)) == -1 ) { perror("write n"); close_all_tubes(tube, q); exit(EXIT_FAILURE); }
+            if( write(tube[i][1], &p, sizeof(p)) == -1 ) { perror("write p"); close_all_pipes(tube, q); exit(EXIT_FAILURE); }
+            if( write(tube[i][1], &n, sizeof(n)) == -1 ) { perror("write n"); close_all_pipes(tube, q); exit(EXIT_FAILURE); }
             close(tube[i][1]); // fermeture de l'écriture.
             exit(EXIT_SUCCESS);
         }
@@ -260,12 +260,12 @@ void parallel_pi(double *pi, int q) {
         close(tube[i][1]);
         double p;
         unsigned long n;
-        if( read(tube[i][0], &p, sizeof(double)) == -1 ) { perror("Read p threw tube"); close_all_tubes(tube, q); exit(EXIT_FAILURE); }
-        if( read(tube[i][0], &n, sizeof(unsigned long)) == -1 ) { perror("Readn  threw tube"); close_all_tubes(tube, q); exit(EXIT_FAILURE); }
+        if( read(tube[i][0], &p, sizeof(double)) == -1 ) { perror("Read p threw tube"); close_all_pipes(tube, q); exit(EXIT_FAILURE); }
+        if( read(tube[i][0], &n, sizeof(unsigned long)) == -1 ) { perror("Readn  threw tube"); close_all_pipes(tube, q); exit(EXIT_FAILURE); }
         close(tube[i][0]);
         p_sum += p;
         n_sum += n;
-        if( wait(NULL) == -1 ) { perror("Waiting child"); exit(EXIT_FAILURE); }
+        if( wait(NULL) == -1 ) { perror("Waiting child"); close_all_pipes(tube, q); exit(EXIT_FAILURE); }
     }
 
     *pi = 4 * p_sum / n_sum;
